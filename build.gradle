@@ -1,4 +1,12 @@
 apply plugin: 'java'
 apply plugin: 'application'
 
-mainClassName = 'hello.HelloWorld'
+mainClassName = 'com.github.b1f6c1c4.mac_to_ip.Main'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'commons-net:commons-net:3.6'
+}
