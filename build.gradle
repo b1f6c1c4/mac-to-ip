@@ -29,7 +29,7 @@ publishing {
         gpr(MavenPublication) {
             groupId 'com.github.b1f6c1c4'
             artifactId 'mac_to_ip'
-            version '0.0.0'
+            version '0.0.1'
 
             from components.java
         }
