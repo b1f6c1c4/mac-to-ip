@@ -1,5 +1,8 @@
-apply plugin: 'java'
-apply plugin: 'application'
+plugins {
+    id 'java'
+    id 'application'
+    id 'maven-publish'
+}
 
 mainClassName = 'com.github.b1f6c1c4.mac_to_ip.Main'
 
@@ -9,4 +12,26 @@ repositories {
 
 dependencies {
     implementation 'commons-net:commons-net:3.6'
+}
+
+publishing {
+    repositories {
+        maven {
+            name = 'mac-to-ip'
+            url = uri('https://maven.pkg.github.com/b1f6c1c4/mac-to-ip')
+            credentials {
+                username = project.findProperty("gpr.user")
+                password = project.findProperty("gpr.key")
+            }
+        }
+    }
+    publications {
+        gpr(MavenPublication) {
+            groupId 'com.github.b1f6c1c4'
+            artifactId 'mac_to_ip'
+            version '0.0.0'
+
+            from components.java
+        }
+    }
 }
