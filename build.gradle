@@ -3,6 +3,9 @@ plugins {
     id 'application'
 }
 
+group = 'com.github.b1f6c1c4'
+version = '0.0.2'
+
 mainClassName = 'com.github.b1f6c1c4.mac_to_ip.Main'
 
 repositories {
