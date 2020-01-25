@@ -4,7 +4,10 @@ plugins {
 }
 
 group = 'com.github.b1f6c1c4'
-version = '0.0.2'
+version = '0.0.3'
+
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
 
 mainClassName = 'com.github.b1f6c1c4.mac_to_ip.Main'
 
