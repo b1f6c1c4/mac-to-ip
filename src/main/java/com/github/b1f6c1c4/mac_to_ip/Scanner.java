@@ -2,6 +2,7 @@ package com.github.b1f6c1c4.mac_to_ip;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
@@ -22,6 +23,34 @@ public class Scanner {
             if (i.isLoopback() || !i.isUp())
                 continue;
             res.addAll(i.getInterfaceAddresses());
+        }
+        return res;
+    }
+
+    public static ArrayList<String> ParseLinux(String macPattern, InputStream stream) throws IOException {
+        var reader = new BufferedReader(new InputStreamReader(stream));
+        String line;
+        var res = new ArrayList<String>();
+        while ((line = reader.readLine()) != null) {
+            if (!line.startsWith("?"))
+                return null;
+            if (line.matches(macPattern)) {
+                var s = line.split(" ", 3)[1];
+                res.add(s.substring(1, s.length() - 1));
+            }
+        }
+        return res;
+    }
+
+    public static ArrayList<String> ParseWin(String macPattern, InputStream stream) throws IOException {
+        var reader = new BufferedReader(new InputStreamReader(stream));
+        String line;
+        var res = new ArrayList<String>();
+        while ((line = reader.readLine()) != null) {
+            if (line.replaceAll("-", ":").matches(macPattern)) {
+                var s = line.trim().split(" ", 2)[0];
+                res.add(s);
+            }
         }
         return res;
     }
@@ -50,15 +79,13 @@ public class Scanner {
 
         var pb = new ProcessBuilder("arp", "-na");
         var p = pb.start();
-        var reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        String line;
-        var res = new ArrayList<String>();
-        while ((line = reader.readLine()) != null) {
-            if (line.matches(macPattern)) {
-                var s = line.split(" ", 3)[1];
-                res.add(s.substring(1, s.length() - 1));
-            }
-        }
+        var res = ParseLinux(macPattern, p.getInputStream());
+        if (res != null)
+            return res;
+
+        pb = new ProcessBuilder("arp", "-a");
+        p = pb.start();
+        res = ParseWin(macPattern, p.getInputStream());
         return res;
     }
 }
