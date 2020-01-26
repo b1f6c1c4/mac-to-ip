@@ -1,21 +1,103 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.jfrog.bintray' version '1.8.4'
     id 'maven-publish'
 }
 
+repositories {
+    jcenter()
+}
+
 group = 'com.github.b1f6c1c4'
-version = '0.0.4'
+version = '0.0.5'
 
 sourceCompatibility = 1.11
 targetCompatibility = 1.11
 
 mainClassName = 'com.github.b1f6c1c4.mac_to_ip.Main'
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation 'commons-net:commons-net:3.6'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+javadoc.failOnError = false
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+def pomConfig = {
+    licenses {
+        license {
+            name 'MIT Licence'
+            url 'http://www.opensource.org/licenses/mit-license.php'
+            distribution 'repo'
+        }
+    }
+
+    developers {
+        developer {
+            id 'b1f6c1c4'
+            url 'https://github.com/b1f6c1c4'
+            name 'Jinzheng Tu'
+            email 'b1f6c1c4@gmail.com'
+        }
+    }
+
+    scm {
+        url 'https://github.com/b1f6c1c4/mac-to-ip'
+    }
+}
+
+publishing {
+    publications {
+        mavenPublication(MavenPublication) {
+            from components.java
+            artifact sourcesJar {
+                classifier 'sources'
+            }
+            artifact javadocJar {
+                classifier 'javadoc'
+            }
+            groupId 'com.github.b1f6c1c4'
+            artifactId 'mac-to-ip'
+            version project.version
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('description', 'Find the LAN host with specified MAC address.')
+                root.appendNode('name', 'mac-to-ip')
+                root.appendNode('url', 'https://github.com/b1f6c1c4/mac-to-ip')
+                root.children().last() + pomConfig
+            }
+        }
+    }
+}
+
+bintray {
+    user = project.findProperty('bintray.user') key = project.findProperty('bintray.key')
+    publications = ['mavenPublication']
+    publish = true
+
+    pkg {
+        repo = 'maven'
+        name = 'mac-to-ip'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/b1f6c1c4/mac-to-ip.git'
+        labels = ['ip', 'mac', 'network']
+        publicDownloadNumbers = true
+        version {
+            name = project.version
+        }
+    }
 }
