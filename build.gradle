@@ -85,7 +85,8 @@ publishing {
 }
 
 bintray {
-    user = project.findProperty('bintray.user') key = project.findProperty('bintray.key')
+    user = project.findProperty('bintray.user')
+    key = project.findProperty('bintray.key')
     publications = ['mavenPublication']
     publish = true
 
