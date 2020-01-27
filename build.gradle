@@ -19,6 +19,7 @@ mainClassName = 'com.github.b1f6c1c4.mac_to_ip.Main'
 
 dependencies {
     implementation 'commons-net:commons-net:3.6'
+    implementation 'org.apache.commons:commons-lang3:3.9'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {

@@ -2,7 +2,6 @@ package com.github.b1f6c1c4.mac_to_ip;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
@@ -13,7 +12,14 @@ import org.apache.commons.net.util.SubnetUtils;
 
 import static java.lang.Thread.*;
 
-public class Scanner {
+interface IScanner {
+    void Scan(String ipPattern) throws IOException;
+
+    ArrayList<String> Parse(String macPattern) throws IOException;
+}
+
+abstract class BaseScanner implements IScanner {
+    protected abstract void Ping(InetAddress target) throws IOException;
 
     private static ArrayList<InterfaceAddress> getMyAddresses() throws IOException {
         var res = new ArrayList<InterfaceAddress>();
@@ -27,8 +33,31 @@ public class Scanner {
         return res;
     }
 
-    public static ArrayList<String> ParseLinux(String macPattern, InputStream stream) throws IOException {
-        var reader = new BufferedReader(new InputStreamReader(stream));
+    public void Scan(String ipPattern) throws IOException {
+        for (var ia : getMyAddresses()) {
+            if (!ia.getAddress().isSiteLocalAddress())
+                continue;
+            var ias = ia.getAddress().getHostAddress();
+            if (ipPattern != null && !ias.matches(ipPattern))
+                continue;
+            var subnet = new SubnetUtils(ia.getAddress().getHostAddress() + "/" + ia.getNetworkPrefixLength());
+            for (var as : subnet.getInfo().getAllAddresses()) {
+                var a = InetAddress.getByName(as);
+                Ping(a);
+            }
+        }
+    }
+}
+
+class ScannerLinux extends BaseScanner {
+    protected void Ping(InetAddress target) throws IOException {
+        target.isReachable(1);
+    }
+
+    public ArrayList<String> Parse(String macPattern) throws IOException {
+        var pb = new ProcessBuilder("arp", "-na");
+        var p = pb.start();
+        var reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
         String line;
         var res = new ArrayList<String>();
         while ((line = reader.readLine()) != null) {
@@ -41,9 +70,18 @@ public class Scanner {
         }
         return res;
     }
+}
 
-    public static ArrayList<String> ParseWin(String macPattern, InputStream stream) throws IOException {
-        var reader = new BufferedReader(new InputStreamReader(stream));
+class ScannerWin extends BaseScanner {
+    protected void Ping(InetAddress target) throws IOException {
+        var pb = new ProcessBuilder("ping", "-w", "1", "-n", "1", target.getHostAddress());
+        pb.start();
+    }
+
+    public ArrayList<String> Parse(String macPattern) throws IOException {
+        var pb = new ProcessBuilder("arp", "-a");
+        var p = pb.start();
+        var reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
         String line;
         var res = new ArrayList<String>();
         while ((line = reader.readLine()) != null) {
@@ -56,46 +94,6 @@ public class Scanner {
                 res.add(s);
             }
         }
-        return res;
-    }
-
-    public static void PingWindows(InetAddress target) throws IOException {
-        var pb = new ProcessBuilder("ping", "-w", "1", "-n", "1", target.getHostAddress());
-        pb.start();
-    }
-
-    public static ArrayList<String> Scan(String macPattern, String ipPattern) throws IOException {
-        var shouldSleep = false;
-        for (var ia : getMyAddresses()) {
-            if (!ia.getAddress().isSiteLocalAddress())
-                continue;
-            var ias = ia.getAddress().getHostAddress();
-            if (ipPattern != null && !ias.matches(ipPattern))
-                continue;
-            var subnet = new SubnetUtils(ia.getAddress().getHostAddress() + "/" + ia.getNetworkPrefixLength());
-            for (var as : subnet.getInfo().getAllAddresses()) {
-                var a = InetAddress.getByName(as);
-                shouldSleep = true;
-                PingWindows(a);
-            }
-        }
-
-        if (shouldSleep) {
-            try {
-                sleep(500);
-            } catch (InterruptedException ignored) {
-            }
-        }
-
-        var pb = new ProcessBuilder("arp", "-na");
-        var p = pb.start();
-        var res = ParseLinux(macPattern, p.getInputStream());
-        if (res != null)
-            return res;
-
-        pb = new ProcessBuilder("arp", "-a");
-        p = pb.start();
-        res = ParseWin(macPattern, p.getInputStream());
         return res;
     }
 }
