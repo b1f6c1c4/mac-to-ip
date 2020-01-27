@@ -47,12 +47,21 @@ public class Scanner {
         String line;
         var res = new ArrayList<String>();
         while ((line = reader.readLine()) != null) {
+            if (!line.startsWith("  "))
+                continue;
+            if (line.matches(".*Internet Address.*"))
+                continue;
             if (line.replaceAll("-", ":").matches(macPattern)) {
                 var s = line.trim().split(" ", 2)[0];
                 res.add(s);
             }
         }
         return res;
+    }
+
+    public static void PingWindows(InetAddress target) throws IOException {
+        var pb = new ProcessBuilder("ping", "-w", "1", "-n", "1", target.getHostAddress());
+        pb.start();
     }
 
     public static ArrayList<String> Scan(String macPattern, String ipPattern) throws IOException {
@@ -66,7 +75,8 @@ public class Scanner {
             var subnet = new SubnetUtils(ia.getAddress().getHostAddress() + "/" + ia.getNetworkPrefixLength());
             for (var as : subnet.getInfo().getAllAddresses()) {
                 var a = InetAddress.getByName(as);
-                shouldSleep |= !a.isReachable(1);
+                shouldSleep = true;
+                PingWindows(a);
             }
         }
 
