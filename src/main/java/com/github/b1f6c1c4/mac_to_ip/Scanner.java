@@ -63,9 +63,9 @@ class ScannerLinux extends BaseScanner {
         while ((line = reader.readLine()) != null) {
             if (!line.startsWith("?"))
                 return null;
-            if (line.matches(macPattern)) {
-                var s = line.split(" ", 3)[1];
-                res.add(s.substring(1, s.length() - 1));
+            var s = line.split(" ");
+            if (s[3].matches(macPattern)) {
+                res.add(s[1].substring(1, s[1].length() - 1));
             }
         }
         return res;
@@ -89,9 +89,9 @@ class ScannerWin extends BaseScanner {
                 continue;
             if (line.matches(".*Internet Address.*"))
                 continue;
-            if (line.replaceAll("-", ":").matches(macPattern)) {
-                var s = line.trim().split(" ", 2)[0];
-                res.add(s);
+            var s = line.replaceAll("-", ":").split(" ");
+            if (s[1].matches(macPattern)) {
+                res.add(s[0]);
             }
         }
         return res;
