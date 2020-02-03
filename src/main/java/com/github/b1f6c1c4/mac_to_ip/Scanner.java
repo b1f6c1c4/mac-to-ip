@@ -89,7 +89,7 @@ class ScannerWin extends BaseScanner {
                 continue;
             if (line.matches(".*Internet Address.*"))
                 continue;
-            var s = line.replaceAll("-", ":").split(" ");
+            var s = line.replaceAll("-", ":").trim().split(" +");
             if (s[1].matches(macPattern)) {
                 res.add(s[0]);
             }
